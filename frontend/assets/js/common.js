@@ -2,8 +2,8 @@
 // COMMON UTILITIES - MedAlert System
 // ============================================
 
-const API_BASE = 'http://localhost:3000/api';
-const SOCKET_URL = 'http://localhost:3000';
+const API_BASE = '/api';
+const SOCKET_URL = window.location.origin;
 
 // ============================================
 // TOKEN & USER MANAGEMENT
