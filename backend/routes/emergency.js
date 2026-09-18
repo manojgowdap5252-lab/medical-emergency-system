@@ -133,9 +133,29 @@ router.get(
   async (req, res) => {
     try {
 
+      console.log('========================================');
+      console.log('ACTIVE EMERGENCIES REQUEST');
+      console.log('Requested by:', req.user.name);
+      console.log('Role:', req.user.role);
+
       const emergencies = await Emergency.find({
         status: 'pending'
       }).sort({ createdAt: -1 });
+
+      console.log('Pending emergency count:', emergencies.length);
+
+      emergencies.forEach((e) => {
+        console.log(
+          'Emergency:',
+          e._id,
+          '| Patient:',
+          e.patientName,
+          '| Status:',
+          e.status
+        );
+      });
+
+      console.log('========================================');
 
       res.status(200).json({
         success: true,
@@ -152,7 +172,6 @@ router.get(
     }
   }
 );
-
 // =====================================================
 // GET /api/emergency/my-active
 // =====================================================
