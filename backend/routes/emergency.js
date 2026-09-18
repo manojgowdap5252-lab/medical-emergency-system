@@ -195,8 +195,15 @@ router.put(
   async (req, res) => {
     try {
 
-      console.log('Accept emergency:', req.params.id);
-      console.log('Ambulance:', req.user.name);
+      console.log('========================================');
+      console.log('ACCEPT REQUEST RECEIVED');
+      console.log('Emergency ID :', req.params.id);
+      console.log('Ambulance ID  :', req.user.id);
+      console.log('Ambulance     :', req.user.name);
+      console.log('User Agent    :', req.headers['user-agent']);
+      console.log('IP Address    :', req.ip);
+      console.log('Time          :', new Date().toISOString());
+      console.log('========================================');
 
       const emergency = await Emergency.findById(req.params.id);
 
