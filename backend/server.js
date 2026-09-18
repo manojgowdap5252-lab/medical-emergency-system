@@ -348,12 +348,12 @@ const createDefaultAdmin = async () => {
 
 const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, async () => {
+server.listen(PORT, '0.0.0.0', async () => {
 
     console.log('');
     console.log('=============================');
     console.log(` MedAlert Server Started`);
-    console.log(` http://localhost:${PORT}`);
+    console.log(` Server listening on port ${PORT}`);
     console.log('=============================');
     console.log('');
 
