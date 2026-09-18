@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAlert - Patient Details</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body class="detail-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="logo">🚑</div>
+    <div style="flex:1;">
+      <h1>Patient Details</h1>
+      <p>Emergency Response</p>
+    </div>
+    <div style="
+      background: var(--danger);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    ">
+      🔴 ACTIVE
+    </div>
+  </div>
+
+  <!-- Alert Container -->
+  <div id="alert-container" style="padding:12px 16px 0;"></div>
+
+  <!-- Current Condition Banner -->
+  <div id="condition-banner" style="
+    background: rgba(229, 57, 53, 0.15);
+    border: 1px solid var(--danger);
+    border-radius: 12px;
+    margin: 16px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  ">
+    <span style="font-size:28px;" id="condition-icon">❤️</span>
+    <div>
+      <div style="font-size:14px; font-weight:700; color:#ef9a9a;" id="condition-text">
+        Loading...
+      </div>
+      <div style="font-size:12px; color:var(--text-secondary);" id="vitals-text">
+        Heart Rate: --
+      </div>
+    </div>
+  </div>
+
+  <!-- Patient Info -->
+  <div class="detail-card">
+    <h3>👤 Patient Information</h3>
+    <div class="detail-row">
+      <span class="detail-label">Name</span>
+      <span class="detail-value" id="p-name">--</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Age</span>
+      <span class="detail-value" id="p-age">--</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Gender</span>
+      <span class="detail-value" id="p-gender">--</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Address</span>
+      <span class="detail-value" id="p-address">--</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Living With</span>
+      <span class="detail-value" id="p-living">--</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Emergency #</span>
+      <span class="detail-value" id="p-emergency">--</span>
+    </div>
+  </div>
+
+  <!-- Medical History -->
+  <div class="detail-card">
+    <h3>🏥 Medical History</h3>
+    <div class="detail-row">
+      <span class="detail-label">Health Issues</span>
+      <span class="detail-value" id="p-health">--</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Surgeries</span>
+      <span class="detail-value" id="p-surgeries">--</span>
+    </div>
+  </div>
+
+  <!-- Map -->
+  <div class="map-placeholder" onclick="showNotification('Map feature coming soon', 2000)">
+    <div class="map-icon">📍</div>
+    <p>View Patient Location on Map</p>
+    <small>Tap to open navigation</small>
+  </div>
+
+  <!-- Step 1: Arrived Button -->
+  <div style="padding: 0 16px 12px;">
+    <button
+      class="btn btn-blue"
+      id="arrived-btn"
+      onclick="markArrived()"
+    >
+      📍 I Have Arrived at Location
+    </button>
+  </div>
+
+  <!-- Step 2: Patient Picked (hidden until arrived) -->
+  <div class="hidden" id="patient-picked-section">
+    <div style="padding: 0 16px 16px;">
+      <button
+        class="btn btn-blue"
+        id="picked-btn"
+        onclick="markPatientPicked()"
+      >
+        🚑 I Have Patient in Ambulance
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 3: Hospital Selection (hidden until patient picked) -->
+  <div class="hidden" id="hospital-section">
+
+    <div style="padding: 0 16px 8px;">
+      <h3 style="font-size:16px; font-weight:700; color:var(--text-primary);">
+        🏨 Select Hospital
+      </h3>
+    </div>
+
+    <!-- Preferred hospitals -->
+    <div id="preferred-hospitals-container" style="padding: 0 16px 8px;"></div>
+
+    <!-- Warning -->
+    <div style="
+      margin: 0 16px 12px;
+      background: rgba(245,124,0,0.1);
+      border: 1px solid var(--warning);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #ffcc02;
+    ">
+      ⚠️ If the preferred hospital is far away, take them to the nearest hospital
+    </div>
+
+    <!-- Search other hospitals -->
+    <div style="padding: 0 16px 8px;">
+      <p style="font-size:13px; color:var(--text-secondary); margin-bottom:8px;">
+        Or search another hospital:
+      </p>
+      <div style="position:relative; margin-bottom:8px;">
+        <input
+          type="text"
+          id="hospital-search-input"
+          placeholder="Search hospital name..."
+          oninput="filterHospitals(this.value)"
+          style="
+            width:100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 40px 12px 14px;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+          "
+        />
+        <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%);">🔍</span>
+      </div>
+
+      <!-- Search results -->
+      <div
+        id="hospital-results"
+        style="
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          max-height: 220px;
+          overflow-y: auto;
+        "
+      ></div>
+    </div>
+
+    <!-- Selected hospital display -->
+    <div
+      id="selected-hospital-display"
+      class="hidden"
+      style="
+        margin: 0 16px 12px;
+        background: rgba(46,125,50,0.15);
+        border: 1px solid #4caf50;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #a5d6a7;
+      "
+    >
+      ✅ Selected: <span id="selected-hospital-name-display"></span>
+    </div>
+
+    <!-- Heading to hospital button -->
+    <div style="padding: 0 16px 24px;">
+      <button
+        class="btn btn-blue"
+        id="heading-btn"
+        onclick="headingToHospital()"
+        disabled
+        style="opacity:0.5;"
+      >
+        🏥 Heading for the Hospital
+      </button>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+
+    // ============================================
+    // VARIABLES
+    // ============================================
+
+    let emergencyData     = null;
+    let patientData       = null;
+    let allHospitals      = [];
+    let selectedHospital  = null;   // { id, name }
+    let currentEmergencyId = null;
+
+    // ============================================
+    // LOAD ON PAGE START
+    // ============================================
+
+    window.addEventListener('load', async () => {
+
+      // Auth check
+      if (!Auth.isLoggedIn()) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const user = Auth.getUser();
+      if (!user || user.role !== 'ambulance') {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Load saved emergency data
+      const saved = sessionStorage.getItem('active_emergency');
+
+      if (!saved) {
+        showAlert('alert-container', 'No active emergency found', 'error');
+        setTimeout(() => {
+          window.location.href = 'emergency.html';
+        }, 2000);
+        return;
+      }
+
+      try {
+        const parsed      = JSON.parse(saved);
+        emergencyData     = parsed.emergency;
+        patientData       = parsed.patient;
+        currentEmergencyId = parsed.emergencyId;
+
+        console.log('Emergency ID:', currentEmergencyId);
+        console.log('Emergency data:', emergencyData);
+        console.log('Patient data:', patientData);
+
+        populatePatientInfo();
+        await loadAllHospitals();
+
+      } catch (err) {
+        console.error('Parse error:', err);
+        showAlert('alert-container', 'Error loading emergency data', 'error');
+      }
+
+    });
+
+    // ============================================
+    // POPULATE PATIENT INFO ON PAGE
+    // ============================================
+
+    function populatePatientInfo() {
+
+      if (!emergencyData) return;
+
+      // Condition icons
+      const icons = {
+        high_bp:           '🔴',
+        low_bp:            '🔵',
+        cardiac_emergency: '❤️',
+        no_pulse:          '💀',
+        getting_low_pulse: '⚠️'
+      };
+
+      document.getElementById('condition-icon').textContent =
+        icons[emergencyData.condition] || '❤️';
+
+      document.getElementById('condition-text').textContent =
+        getConditionLabel(emergencyData.condition);
+
+      document.getElementById('vitals-text').textContent =
+        `Heart Rate: ${emergencyData.heartRate || '--'} BPM`;
+
+      if (!patientData) return;
+
+      document.getElementById('p-name').textContent      = patientData.name || '--';
+      document.getElementById('p-age').textContent       = patientData.age ? `${patientData.age} years` : '--';
+      document.getElementById('p-gender').textContent    = patientData.gender || '--';
+      document.getElementById('p-address').textContent   = patientData.address || '--';
+      document.getElementById('p-living').textContent    = patientData.livingWith || '--';
+      document.getElementById('p-emergency').textContent = patientData.emergencyContact || '--';
+      document.getElementById('p-health').textContent    = patientData.previousHealthProblems || 'None';
+      document.getElementById('p-surgeries').textContent = patientData.previousSurgeries || 'None';
+    }
+
+    // ============================================
+    // STEP 1: MARK ARRIVED
+    // ============================================
+
+    async function markArrived() {
+
+      const btn = document.getElementById('arrived-btn');
+      showLoading(btn, 'Confirming arrival...');
+
+      console.log('Marking arrived for emergency:', currentEmergencyId);
+
+      const result = await API.put(
+        `/emergency/${currentEmergencyId}/arrived`,
+        {}
+      );
+
+      console.log('Arrived result:', result);
+
+      hideLoading(btn);
+
+      if (result.ok && result.data.success) {
+
+        btn.textContent = '✅ Arrived - Buzzer Triggered';
+        btn.disabled = true;
+        btn.style.background = 'var(--success)';
+        btn.style.opacity = '1';
+
+        showAlert('alert-container', 'Arrival confirmed! Buzzer triggered.', 'success');
+
+        // Show patient picked button
+        document.getElementById('patient-picked-section').classList.remove('hidden');
+
+      } else {
+        showAlert(
+          'alert-container',
+          result.data.message || 'Failed to confirm arrival',
+          'error'
+        );
+      }
+    }
+
+    // ============================================
+    // STEP 2: PATIENT IN AMBULANCE
+    // ============================================
+
+    async function markPatientPicked() {
+
+      const btn = document.getElementById('picked-btn');
+      showLoading(btn, 'Confirming...');
+
+      console.log('Marking patient picked for:', currentEmergencyId);
+
+      const result = await API.put(
+        `/emergency/${currentEmergencyId}/patient-picked`,
+        {}
+      );
+
+      console.log('Patient picked result:', result);
+
+      hideLoading(btn);
+
+      if (result.ok && result.data.success) {
+
+        btn.textContent = '✅ Patient is in the Ambulance';
+        btn.disabled = true;
+        btn.style.background = 'var(--success)';
+        btn.style.opacity = '1';
+
+        showAlert('alert-container', 'Patient picked up confirmed!', 'success');
+
+        // Show hospital selection
+        document.getElementById('hospital-section').classList.remove('hidden');
+
+        // Render hospital lists
+        renderPreferredHospitals();
+        renderHospitalList('');
+
+        // Scroll down to hospital section
+        setTimeout(() => {
+          document.getElementById('hospital-section').scrollIntoView({
+            behavior: 'smooth'
+          });
+        }, 300);
+
+      } else {
+        showAlert(
+          'alert-container',
+          result.data.message || 'Failed to confirm',
+          'error'
+        );
+      }
+    }
+
+    // ============================================
+    // LOAD ALL HOSPITALS FROM SERVER
+    // ============================================
+
+    async function loadAllHospitals() {
+
+      try {
+        const response = await fetch('http://localhost:3000/api/hospitals');
+        const data = await response.json();
+
+        console.log('Hospitals loaded:', data);
+
+        if (data.success) {
+          allHospitals = data.hospitals;
+          console.log('All hospitals:', allHospitals);
+        } else {
+          console.error('Failed to load hospitals:', data);
+        }
+
+      } catch (err) {
+        console.error('Hospital load error:', err);
+      }
+    }
+
+    // ============================================
+    // RENDER PREFERRED HOSPITALS LIST
+    // ============================================
+
+    function renderPreferredHospitals() {
+
+      const container = document.getElementById('preferred-hospitals-container');
+      const prefs = patientData?.hospitalPreferences || [];
+
+      if (prefs.length === 0) {
+        container.innerHTML = `
+          <p style="font-size:13px; color:var(--text-secondary); margin-bottom:8px;">
+            No hospital preferences set by patient
+          </p>
+        `;
+        return;
+      }
+
+      let html = `
+        <p style="font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">
+          🏥 Patient's Preferred Hospitals:
+        </p>
+      `;
+
+      prefs.forEach((pref) => {
+
+        // Find this hospital in allHospitals to get its _id
+        const found = allHospitals.find(
+          (h) => h.hospitalName === pref.hospitalName
+        );
+
+        const hospitalId   = found ? found._id : pref.hospitalId;
+        const hospitalName = pref.hospitalName;
+
+        html += `
+          <div
+            class="hospital-result-item"
+            id="pref-${hospitalId}"
+            onclick="selectHospital('${hospitalId}', '${hospitalName}')"
+            style="
+              padding: 12px 14px;
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              margin-bottom: 6px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              background: rgba(255,255,255,0.03);
+              transition: background 0.2s;
+            "
+          >
+            <div>
+              <div style="font-size:14px; font-weight:600;">
+                ${pref.order}. ${hospitalName}
+              </div>
+              <div style="font-size:11px; color:var(--text-secondary);">
+                Patient preference #${pref.order}
+              </div>
+            </div>
+            <span
+              id="pref-check-${hospitalId}"
+              style="color:#4caf50; font-size:18px; display:none;"
+            >✅</span>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    // ============================================
+    // RENDER HOSPITAL SEARCH RESULTS
+    // ============================================
+
+    function renderHospitalList(query) {
+
+      const resultsContainer = document.getElementById('hospital-results');
+
+      const filtered = query
+        ? allHospitals.filter((h) =>
+            h.hospitalName.toLowerCase().includes(query.toLowerCase())
+          )
+        : allHospitals;
+
+      if (filtered.length === 0) {
+        resultsContainer.innerHTML = `
+          <div style="padding:14px; color:var(--text-secondary); font-size:13px; text-align:center;">
+            No hospitals found
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+
+      filtered.forEach((h) => {
+
+        const isSelected = selectedHospital && selectedHospital.id === h._id;
+
+        html += `
+          <div
+            id="search-item-${h._id}"
+            onclick="selectHospital('${h._id}', '${h.hospitalName}')"
+            style="
+              padding: 12px 14px;
+              border-bottom: 1px solid var(--border);
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              background: ${isSelected ? 'rgba(46,125,50,0.15)' : 'transparent'};
+              transition: background 0.2s;
+            "
+          >
+            <div>
+              <div style="font-size:14px; font-weight:500;">${h.hospitalName}</div>
+              ${h.address
+                ? `<div style="font-size:11px; color:var(--text-secondary);">${h.address}</div>`
+                : ''
+              }
+            </div>
+            <span
+              id="search-check-${h._id}"
+              style="color:#4caf50; font-size:18px; display:${isSelected ? 'block' : 'none'};"
+            >✅</span>
+          </div>
+        `;
+      });
+
+      resultsContainer.innerHTML = html;
+    }
+
+    // ============================================
+    // FILTER HOSPITALS ON SEARCH INPUT
+    // ============================================
+
+    function filterHospitals(query) {
+      renderHospitalList(query);
+    }
+
+    // ============================================
+    // SELECT A HOSPITAL
+    // ============================================
+
+    function selectHospital(id, name) {
+
+      console.log('Hospital selected:', id, name);
+
+      selectedHospital = { id, name };
+
+      // Hide all check marks
+      document.querySelectorAll('[id^="pref-check-"]').forEach(el => {
+        el.style.display = 'none';
+      });
+      document.querySelectorAll('[id^="search-check-"]').forEach(el => {
+        el.style.display = 'none';
+      });
+
+      // Reset all item backgrounds
+      document.querySelectorAll('[id^="pref-"]').forEach(el => {
+        if (el.tagName === 'DIV') {
+          el.style.background = 'rgba(255,255,255,0.03)';
+        }
+      });
+      document.querySelectorAll('[id^="search-item-"]').forEach(el => {
+        el.style.background = 'transparent';
+      });
+
+      // Show check and highlight selected item
+      const prefCheck   = document.getElementById(`pref-check-${id}`);
+      const searchCheck = document.getElementById(`search-check-${id}`);
+      const prefItem    = document.getElementById(`pref-${id}`);
+      const searchItem  = document.getElementById(`search-item-${id}`);
+
+      if (prefCheck)  prefCheck.style.display  = 'block';
+      if (searchCheck) searchCheck.style.display = 'block';
+      if (prefItem)   prefItem.style.background  = 'rgba(46,125,50,0.15)';
+      if (searchItem) searchItem.style.background = 'rgba(46,125,50,0.15)';
+
+      // Show selected display bar
+      const displayEl = document.getElementById('selected-hospital-display');
+      displayEl.classList.remove('hidden');
+      document.getElementById('selected-hospital-name-display').textContent = name;
+
+      // Enable heading button
+      const headingBtn = document.getElementById('heading-btn');
+      headingBtn.disabled = false;
+      headingBtn.style.opacity = '1';
+
+      console.log('Selected hospital object:', selectedHospital);
+    }
+
+    // ============================================
+    // STEP 3: HEADING TO HOSPITAL
+    // ============================================
+
+    async function headingToHospital() {
+
+      // Safety check
+      if (!selectedHospital) {
+        showAlert('alert-container', 'Please select a hospital first', 'error');
+        return;
+      }
+
+      if (!selectedHospital.id || !selectedHospital.name) {
+        showAlert('alert-container', 'Hospital selection is invalid. Please select again.', 'error');
+        return;
+      }
+
+      if (!currentEmergencyId) {
+        showAlert('alert-container', 'Emergency ID missing. Go back and try again.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('heading-btn');
+      showLoading(btn, 'Confirming...');
+
+      // Log what we are sending
+      console.log('=== HEADING TO HOSPITAL ===');
+      console.log('Emergency ID  :', currentEmergencyId);
+      console.log('Hospital ID   :', selectedHospital.id);
+      console.log('Hospital Name :', selectedHospital.name);
+
+      const payload = {
+        hospitalId:   selectedHospital.id,
+        hospitalName: selectedHospital.name
+      };
+
+      console.log('Sending payload:', payload);
+
+      const result = await API.put(
+        `/emergency/${currentEmergencyId}/heading-hospital`,
+        payload
+      );
+
+      console.log('Heading hospital result:', result);
+
+      hideLoading(btn);
+
+      if (result.ok && result.data.success) {
+
+        // Save route data for next page
+        const routeData = {
+          emergencyId:     currentEmergencyId,
+          hospitalName:    selectedHospital.name,
+          hospitalId:      selectedHospital.id,
+          patientName:     patientData?.name || '--',
+          patientAddress:  patientData?.address || '--'
+        };
+
+        console.log('Saving route data:', routeData);
+        sessionStorage.setItem('route_data', JSON.stringify(routeData));
+
+        showAlert('alert-container', 'Confirmed! Going to hospital route page...', 'success');
+
+        // Go to hospital route page
+        setTimeout(() => {
+          window.location.href = 'hospital-route.html';
+        }, 800);
+
+      } else {
+
+        console.error('Heading hospital failed:', result.data);
+
+        showAlert(
+          'alert-container',
+          result.data.message || 'Failed to update. Please try again.',
+          'error'
+        );
+
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+    }
+
+  </script>
+</body>
+</html>

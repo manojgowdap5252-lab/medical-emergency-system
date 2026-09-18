@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAlert - Ambulance Login</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <span class="heart-icon">🚑</span>
+        <h2>MedAlert</h2>
+        <p>Ambulance Emergency Portal</p>
+      </div>
+
+      <div id="alert-container"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label>Driver / Paramedic Name</label>
+          <input type="text" id="name" placeholder="Enter your name" required />
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="Enter password" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="login-btn">
+          🔐 Login
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    document
+      .getElementById('login-form')
+      .addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById('name').value.trim();
+        const password = document.getElementById('password').value;
+        const btn = document.getElementById('login-btn');
+
+        showLoading(btn, 'Logging in...');
+
+        const result = await API.post('/auth/login', {
+          name,
+          password,
+          role: 'ambulance'
+        });
+
+        hideLoading(btn);
+
+        if (result.ok && result.data.success) {
+          Auth.setToken(result.data.token);
+          Auth.setUser(result.data.user);
+          window.location.href = 'emergency.html';
+        } else {
+          showAlert(
+            'alert-container',
+            result.data.message || 'Login failed',
+            'error'
+          );
+        }
+      });
+
+    window.addEventListener('load', () => {
+      if (Auth.isLoggedIn()) {
+        const user = Auth.getUser();
+        if (user && user.role === 'ambulance') {
+          window.location.href = 'emergency.html';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

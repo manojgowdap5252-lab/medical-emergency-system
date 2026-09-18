@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAlert - Dashboard</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body class="dashboard-page">
+
+  <!-- Connection Banner -->
+  <div class="connection-banner" id="connection-banner">
+    <span id="conn-status-text">📡 Connecting to server...</span>
+    <span id="conn-time" style="color:var(--text-secondary); font-size:11px;"></span>
+  </div>
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="logo">❤️</div>
+    <div style="flex:1;">
+      <h1 id="patient-display-name">Loading...</h1>
+      <p id="patient-display-age"></p>
+    </div>
+    <button class="logout-btn" onclick="logout('login.html')">Logout</button>
+  </div>
+
+  <!-- Alert container -->
+  <div id="alert-container" style="padding:0 16px;"></div>
+
+  <!-- Sensor Source Banner -->
+  <div id="sensor-banner" style="
+    background: rgba(245,124,0,0.15);
+    border-bottom: 1px solid var(--warning);
+    padding: 8px 16px;
+    font-size: 12px;
+    color: #ffcc02;
+    text-align: center;
+  ">
+    ⚠️ Simulated data - Connect ESP32 for real readings
+  </div>
+
+  <!-- Heart Rate Display -->
+  <div class="hr-display">
+    <div>
+      <div class="hr-label">Heart Rate</div>
+      <div>
+        <span class="hr-value" id="heart-rate-value">--</span>
+        <span class="hr-unit"> BPM</span>
+      </div>
+    </div>
+    <span class="hr-icon">❤️</span>
+    <div style="text-align:right;">
+      <div class="hr-label">SpO₂</div>
+      <div>
+        <span class="hr-value" id="spo2-value" style="font-size:24px;">--</span>
+        <span class="hr-unit"> %</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================ -->
+  <!-- MANUAL CALL AMBULANCE BUTTON                     -->
+  <!-- ================================================ -->
+  <div style="padding: 0 16px 12px;">
+    <button
+      id="manual-ambulance-btn"
+      onclick="manualCallAmbulance()"
+      style="
+        width: 100%;
+        background: #c62828;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 16px;
+        font-size: 17px;
+        font-weight: 800;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 20px rgba(198,40,40,0.5);
+        transition: all 0.2s;
+      "
+    >
+      🚨 CALL AMBULANCE NOW
+    </button>
+  </div>
+
+  <!-- Status Badge -->
+  <div class="status-badge status-normal" id="status-badge">
+    ✅ Normal - All readings stable
+  </div>
+
+  <!-- BP Graph -->
+  <div class="bp-graph-container">
+    <h3>📈 Heart Rate Graph (Live)</h3>
+    <canvas id="bp-canvas" height="100"></canvas>
+  </div>
+
+  <!-- Circular Gauge -->
+  <div class="gauge-section">
+    <div class="gauge-wrapper">
+      <canvas id="gauge-canvas" width="220" height="220"></canvas>
+      <div class="gauge-center-text">
+        <div class="bp-value" id="gauge-value">--</div>
+        <div class="bp-unit">BPM</div>
+        <div class="bp-label">Heart Rate</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ambulance Status Banner -->
+  <div class="hidden" id="ambulance-banner" style="
+    background: rgba(46,125,50,0.15);
+    border: 1px solid #4caf50;
+    border-radius: 12px;
+    margin: 0 16px 16px;
+    padding: 16px;
+  ">
+    <p style="color:#81c784; font-weight:700; font-size:15px;">🚑 Ambulance Status</p>
+    <p id="ambulance-status-text" style="color:var(--text-secondary); font-size:13px; margin-top:4px;">
+      Waiting for ambulance...
+    </p>
+  </div>
+
+  <!-- AUTO Emergency Popup Overlay -->
+  <div class="emergency-overlay hidden" id="emergency-overlay">
+    <div class="emergency-popup">
+      <span class="warning-icon">⚠️</span>
+      <h2>Are you alright?</h2>
+      <p id="popup-message">Feeling some kind of discomfort?</p>
+      <div class="emergency-timer" id="popup-timer">5</div>
+      <p style="font-size:12px; color:var(--text-secondary); margin-bottom:16px;">
+        Press NO if you are not feeling well
+      </p>
+      <button class="no-btn" onclick="userPressedNo()">
+        ❌ NO - I am not okay
+      </button>
+    </div>
+  </div>
+
+  <!-- MANUAL CALL CONFIRM POPUP -->
+  <div class="hidden" id="manual-confirm-overlay" style="
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  ">
+    <div style="
+      background: var(--bg-card);
+      border: 2px solid #c62828;
+      border-radius: 16px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 0 40px rgba(198,40,40,0.5);
+      text-align: center;
+    ">
+      <div style="font-size:52px; margin-bottom:12px;">🚨</div>
+      <h2 style="font-size:20px; margin-bottom:10px; color:white;">
+        Call Ambulance?
+      </h2>
+      <p style="font-size:14px; color:var(--text-secondary); margin-bottom:24px;">
+        This will immediately send an emergency alert to the nearest ambulance.
+        Only press confirm if you need help.
+      </p>
+
+      <!-- Confirm Button -->
+      <button
+        onclick="confirmManualCall()"
+        id="confirm-manual-btn"
+        style="
+          width: 100%;
+          background: #c62828;
+          color: white;
+          border: none;
+          border-radius: 10px;
+          padding: 15px;
+          font-size: 17px;
+          font-weight: 800;
+          cursor: pointer;
+          margin-bottom: 10px;
+        "
+      >
+        🚑 YES CALL AMBULANCE
+      </button>
+
+      <!-- Cancel Button -->
+      <button
+        onclick="cancelManualCall()"
+        style="
+          width: 100%;
+          background: transparent;
+          color: var(--text-secondary);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          padding: 12px;
+          font-size: 15px;
+          cursor: pointer;
+        "
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+
+    const THRESHOLDS = {
+      criticalHigh: 130,
+      warningHigh:  110,
+      normalMax:    100,
+      normalMin:     60,
+      warningLow:    50,
+      criticalLow:   40
+    };
+
+    const MIN_VALID_HR           = 30;
+    const WARMUP_SECONDS         = 30;
+    const CRITICAL_READINGS_NEEDED = 5;
+
+    // ============================================
+    // STATE
+    // ============================================
+
+    let socket           = null;
+    let patientData      = null;
+    let currentHeartRate = 0;
+    let currentSpO2      = 0;
+    let graphData        = [];
+    const MAX_GRAPH_POINTS = 40;
+
+    let warmupDone        = false;
+    let warmupSecondsLeft = WARMUP_SECONDS;
+    let warmupInterval    = null;
+
+    let criticalCount = 0;
+    let stableCount   = 0;
+
+    let emergency = {
+      active:        false,
+      stage:         0,
+      timerInterval: null,
+      waitTimeout:   null,
+      noPressed:     false,
+      sent:          false
+    };
+
+    // Track if real ESP32 data is coming
+    let realDataReceived    = false;
+    let simulationInterval  = null;
+
+    // ============================================
+    // INIT
+    // ============================================
+
+    window.addEventListener('load', async () => {
+
+      if (!Auth.isLoggedIn()) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const user = Auth.getUser();
+      if (!user || user.role !== 'customer') {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      await loadPatientProfile();
+      initSocket(user.id);
+      initGauge();
+      initGraph();
+      startWarmupTimer();
+    });
+
+    // ============================================
+    // WARMUP TIMER
+    // ============================================
+
+    function startWarmupTimer() {
+
+      warmupInterval = setInterval(() => {
+
+        warmupSecondsLeft--;
+
+        if (warmupSecondsLeft <= 0) {
+          clearInterval(warmupInterval);
+          warmupDone = true;
+          console.log('Warmup done. Monitoring active.');
+        }
+
+      }, 1000);
+    }
+
+    // ============================================
+    // LOAD PATIENT
+    // ============================================
+
+    async function loadPatientProfile() {
+
+      const result = await API.get('/patient/profile');
+
+      if (result.ok && result.data.success) {
+        patientData = result.data.patient;
+        document.getElementById('patient-display-name').textContent = patientData.name;
+        document.getElementById('patient-display-age').textContent  =
+          `Age: ${patientData.age} | ${patientData.gender}`;
+      } else {
+        window.location.href = 'setup.html';
+      }
+    }
+
+    // ============================================
+    // SOCKET
+    // ============================================
+
+    function initSocket(userId) {
+
+      socket = io(SOCKET_URL);
+
+      socket.on('connect', () => {
+        const user = Auth.getUser();
+        socket.emit('join_room', { role: 'customer', userId: user.id });
+        updateConnectionBanner('🟢 Connected to server', true);
+      });
+
+      socket.on('disconnect', () => {
+        updateConnectionBanner('🔴 Disconnected', false);
+      });
+
+      // Real data from ESP32
+      socket.on('sensor_data', (data) => {
+
+        // Stop simulation
+        if (simulationInterval) {
+          clearInterval(simulationInterval);
+          simulationInterval = null;
+        }
+
+        // Show real data banner
+        if (!realDataReceived) {
+          realDataReceived = true;
+          document.getElementById('sensor-banner').style.background =
+            'rgba(46,125,50,0.15)';
+          document.getElementById('sensor-banner').style.color = '#81c784';
+          document.getElementById('sensor-banner').style.borderBottomColor = '#4caf50';
+          document.getElementById('sensor-banner').textContent =
+            '✅ Real data from ESP32 sensor';
+        }
+
+        updateReadings(data.heartRate, data.spO2);
+      });
+
+      socket.on('trigger_buzzer', (data) => {
+        showAlert('alert-container', data.message || 'Ambulance arrived!', 'success');
+      });
+
+      socket.on('ambulance_coming', (data) => {
+        document.getElementById('ambulance-banner').classList.remove('hidden');
+        document.getElementById('ambulance-status-text').textContent =
+          `🚑 ${data.ambulanceName} is on the way!`;
+      });
+
+      socket.on('info_sent_to_hospital', (data) => {
+        document.getElementById('ambulance-status-text').textContent =
+          `🏥 Your info sent to ${data.hospitalName}`;
+        showNotification(`Information sent to ${data.hospitalName}`);
+      });
+
+      // Start simulation after 3 seconds if no real data
+      setTimeout(() => {
+        if (!realDataReceived) {
+          console.log('No ESP32 data. Starting simulation.');
+          startSimulation();
+        }
+      }, 3000);
+    }
+
+    function updateConnectionBanner(text, connected) {
+      const banner   = document.getElementById('connection-banner');
+      const statusEl = document.getElementById('conn-status-text');
+      statusEl.textContent = text;
+      banner.style.background = connected
+        ? 'rgba(46,125,50,0.2)'
+        : 'rgba(229,57,53,0.15)';
+      document.getElementById('conn-time').textContent =
+        new Date().toLocaleTimeString();
+    }
+
+    // ============================================
+    // SIMULATION
+    // ============================================
+
+    let simHR    = 72;
+    let simTrend = 1;
+
+    function startSimulation() {
+
+      simulationInterval = setInterval(() => {
+        simTrend = simHR > 95 ? -1 : simHR < 65 ? 1 : simTrend;
+        simHR   += simTrend * (Math.random() * 2);
+        simHR    = Math.round(simHR);
+        updateReadings(simHR, Math.round(96 + Math.random() * 3));
+      }, 2000);
+    }
+
+    // ============================================
+    // UPDATE READINGS
+    // ============================================
+
+    function updateReadings(heartRate, spO2) {
+
+      // Ignore invalid readings
+      if (heartRate < MIN_VALID_HR) {
+        console.log(`Ignored: ${heartRate} BPM (too low)`);
+        return;
+      }
+
+      currentHeartRate = Math.round(heartRate);
+      currentSpO2      = Math.round(spO2);
+
+      document.getElementById('heart-rate-value').textContent = currentHeartRate;
+      document.getElementById('spo2-value').textContent       = currentSpO2;
+      document.getElementById('gauge-value').textContent      = currentHeartRate;
+
+      graphData.push(currentHeartRate);
+      if (graphData.length > MAX_GRAPH_POINTS) graphData.shift();
+
+      drawGraph();
+      drawGauge(currentHeartRate);
+      updateStatus(currentHeartRate);
+
+      if (warmupDone && !emergency.sent) {
+        checkEmergency(currentHeartRate);
+      }
+    }
+
+    // ============================================
+    // STATUS
+    // ============================================
+
+    function updateStatus(hr) {
+
+      const badge = document.getElementById('status-badge');
+
+      if (!warmupDone) {
+        badge.className   = 'status-badge status-warning';
+        badge.textContent = `⏳ Sensor stabilizing... (${warmupSecondsLeft}s)`;
+        return;
+      }
+
+      if (hr >= THRESHOLDS.criticalHigh || hr <= THRESHOLDS.criticalLow) {
+        badge.className   = 'status-badge status-critical';
+        badge.textContent = '🚨 CRITICAL - Emergency protocol active';
+      } else if (hr >= THRESHOLDS.warningHigh || hr <= THRESHOLDS.warningLow) {
+        badge.className   = 'status-badge status-warning';
+        badge.textContent = '⚠️ Warning - Heart rate abnormal';
+      } else {
+        badge.className   = 'status-badge status-normal';
+        badge.textContent = '✅ Normal - All readings stable';
+      }
+    }
+
+    // ============================================
+    // AUTO EMERGENCY CHECK
+    // ============================================
+
+    function checkEmergency(hr) {
+
+      const isCritical =
+        hr >= THRESHOLDS.criticalHigh ||
+        hr <= THRESHOLDS.criticalLow;
+
+      if (isCritical) {
+        criticalCount++;
+        stableCount = 0;
+
+        if (criticalCount >= CRITICAL_READINGS_NEEDED &&
+            !emergency.active && emergency.stage === 0) {
+          startEmergencyProtocol();
+        }
+
+      } else {
+        stableCount++;
+        criticalCount = 0;
+
+        if (stableCount >= 3 && emergency.active && emergency.stage < 3) {
+          resetEmergencyProtocol();
+        }
+      }
+    }
+
+    // ============================================
+    // AUTO EMERGENCY PROTOCOL
+    // ============================================
+
+    function startEmergencyProtocol() {
+      emergency.active    = true;
+      emergency.stage     = 1;
+      emergency.noPressed = false;
+      showEmergencyPopup(5, 'Feeling some kind of discomfort?');
+    }
+
+    function showEmergencyPopup(seconds, message) {
+
+      const overlay = document.getElementById('emergency-overlay');
+      const timerEl = document.getElementById('popup-timer');
+      const msgEl   = document.getElementById('popup-message');
+
+      msgEl.textContent = message;
+      overlay.classList.remove('hidden');
+
+      let remaining = seconds;
+      timerEl.textContent = remaining;
+
+      clearInterval(emergency.timerInterval);
+
+      emergency.timerInterval = setInterval(() => {
+        remaining--;
+        timerEl.textContent = remaining;
+
+        if (remaining <= 0) {
+          clearInterval(emergency.timerInterval);
+          overlay.classList.add('hidden');
+          if (!emergency.noPressed) handleTimerExpired();
+        }
+      }, 1000);
+    }
+
+    function handleTimerExpired() {
+      if (emergency.stage === 1 || emergency.stage === 2) {
+        sendEmergency('cardiac_emergency');
+      }
+    }
+
+    function userPressedNo() {
+
+      clearInterval(emergency.timerInterval);
+      document.getElementById('emergency-overlay').classList.add('hidden');
+      emergency.noPressed = true;
+
+      if (emergency.stage === 1) {
+        emergency.stage = 2;
+        clearTimeout(emergency.waitTimeout);
+        emergency.waitTimeout = setTimeout(() => {
+          emergency.noPressed = false;
+          showEmergencyPopup(3, 'Still not feeling well?');
+        }, 10000);
+
+      } else if (emergency.stage === 2) {
+        sendEmergency('cardiac_emergency');
+
+      } else if (emergency.stage >= 3) {
+        clearTimeout(emergency.waitTimeout);
+        emergency.waitTimeout = setTimeout(() => {
+          emergency.noPressed = false;
+          showEmergencyPopup(5, 'Checking again - Are you alright?');
+        }, 5000);
+      }
+    }
+
+    function resetEmergencyProtocol() {
+
+      clearInterval(emergency.timerInterval);
+      clearTimeout(emergency.waitTimeout);
+
+      emergency = {
+        active: false, stage: 0,
+        timerInterval: null, waitTimeout: null,
+        noPressed: false, sent: false
+      };
+
+      criticalCount = 0;
+      stableCount   = 0;
+
+      document.getElementById('emergency-overlay').classList.add('hidden');
+    }
+
+    // ============================================
+    // MANUAL CALL AMBULANCE
+    // ============================================
+
+    function manualCallAmbulance() {
+
+      // If emergency already sent dont show again
+      if (emergency.sent) {
+        showAlert(
+          'alert-container',
+          'Emergency already active. Ambulance has been notified.',
+          'warning'
+        );
+        return;
+      }
+
+      // Show confirmation popup
+      document.getElementById('manual-confirm-overlay').classList.remove('hidden');
+    }
+
+    function cancelManualCall() {
+      document.getElementById('manual-confirm-overlay').classList.add('hidden');
+    }
+
+    async function confirmManualCall() {
+
+      const btn = document.getElementById('confirm-manual-btn');
+      btn.disabled    = true;
+      btn.textContent = '⏳ Sending...';
+
+      // Hide confirm popup
+      document.getElementById('manual-confirm-overlay').classList.add('hidden');
+
+      // Send emergency directly - no protocol needed
+      await sendEmergency('cardiac_emergency', true);
+    }
+
+    // ============================================
+    // SEND EMERGENCY TO SERVER
+    // isManual = true means skip protocol checks
+    // ============================================
+
+    async function sendEmergency(conditionOverride = null, isManual = false) {
+
+      if (emergency.sent) {
+        console.log('Emergency already sent');
+        return;
+      }
+
+      emergency.stage = 3;
+      emergency.sent  = true;
+
+      document.getElementById('emergency-overlay').classList.add('hidden');
+
+      // Determine condition
+      let condition = conditionOverride || 'cardiac_emergency';
+
+      if (!isManual) {
+        if (currentHeartRate <= THRESHOLDS.criticalLow) {
+          condition = currentHeartRate <= 20 ? 'no_pulse' : 'getting_low_pulse';
+        } else if (currentHeartRate >= THRESHOLDS.criticalHigh) {
+          condition = 'high_bp';
+        }
+      }
+
+      console.log('Sending emergency:', condition, '| Manual:', isManual);
+
+      const result = await API.post('/emergency/trigger', {
+        condition,
+        heartRate: currentHeartRate || 0,
+        bpValue:   currentHeartRate || 0,
+        isManual
+      });
+
+      console.log('Emergency result:', result);
+
+      if (result.ok && result.data.success) {
+
+        // Disable manual button since emergency is active
+        const manualBtn = document.getElementById('manual-ambulance-btn');
+        manualBtn.disabled   = true;
+        manualBtn.style.opacity = '0.6';
+        manualBtn.textContent = '🚨 Emergency Active - Ambulance Notified';
+
+        if (isManual) {
+          showAlert(
+            'alert-container',
+            '🚨 Ambulance called! Help is on the way.',
+            'warning'
+          );
+        } else {
+          showAlert(
+            'alert-container',
+            '🚨 Emergency alert sent! Ambulance notified.',
+            'warning'
+          );
+        }
+
+        document.getElementById('ambulance-banner').classList.remove('hidden');
+        document.getElementById('ambulance-status-text').textContent =
+          'Emergency sent. Waiting for ambulance to respond...';
+
+        // Start recurring popups only for auto emergency
+        if (!isManual) {
+          startRecurringPopups();
+        }
+
+      } else {
+
+        // Reset on failure
+        emergency.sent  = false;
+        emergency.stage = 0;
+        emergency.active = false;
+        criticalCount   = 0;
+
+        // Re-enable manual button
+        const manualBtn = document.getElementById('manual-ambulance-btn');
+        manualBtn.disabled      = false;
+        manualBtn.style.opacity = '1';
+        manualBtn.textContent   = '🚨 CALL AMBULANCE NOW';
+
+        // Re-enable confirm button
+        const confirmBtn = document.getElementById('confirm-manual-btn');
+        if (confirmBtn) {
+          confirmBtn.disabled    = false;
+          confirmBtn.textContent = '🚑 YES CALL AMBULANCE';
+        }
+
+        showAlert(
+          'alert-container',
+          result.data.message || 'Failed to send. Try again.',
+          'error'
+        );
+      }
+    }
+
+    function startRecurringPopups() {
+      emergency.stage = 4;
+      emergency.waitTimeout = setTimeout(() => {
+        if (emergency.stage === 4) {
+          emergency.noPressed = false;
+          showEmergencyPopup(5, 'Ambulance coming - Press NO if resolved');
+          startRecurringPopups();
+        }
+      }, 5000);
+    }
+
+    // ============================================
+    // GRAPH
+    // ============================================
+
+    let graphCanvas, graphCtx;
+
+    function initGraph() {
+      graphCanvas       = document.getElementById('bp-canvas');
+      graphCtx          = graphCanvas.getContext('2d');
+      graphCanvas.width = graphCanvas.offsetWidth;
+    }
+
+    function drawGraph() {
+
+      if (!graphCtx) return;
+
+      const w = graphCanvas.width;
+      const h = graphCanvas.height;
+      graphCtx.clearRect(0, 0, w, h);
+
+      if (graphData.length < 2) return;
+
+      const minVal = 30;
+      const maxVal = 160;
+      const step   = w / (MAX_GRAPH_POINTS - 1);
+
+      // Grid
+      graphCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+      graphCtx.lineWidth   = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = (h / 4) * i;
+        graphCtx.beginPath();
+        graphCtx.moveTo(0, y);
+        graphCtx.lineTo(w, y);
+        graphCtx.stroke();
+      }
+
+      // Fill
+      const gradient = graphCtx.createLinearGradient(0, 0, 0, h);
+      gradient.addColorStop(0, 'rgba(229,57,53,0.5)');
+      gradient.addColorStop(1, 'rgba(229,57,53,0.0)');
+
+      graphCtx.beginPath();
+      graphData.forEach((val, i) => {
+        const x = i * step;
+        const y = h - ((val - minVal) / (maxVal - minVal)) * h;
+        i === 0 ? graphCtx.moveTo(x, y) : graphCtx.lineTo(x, y);
+      });
+      graphCtx.lineTo((graphData.length - 1) * step, h);
+      graphCtx.lineTo(0, h);
+      graphCtx.closePath();
+      graphCtx.fillStyle = gradient;
+      graphCtx.fill();
+
+      // Line
+      graphCtx.beginPath();
+      graphCtx.strokeStyle = '#e53935';
+      graphCtx.lineWidth   = 2;
+      graphCtx.lineJoin    = 'round';
+      graphData.forEach((val, i) => {
+        const x = i * step;
+        const y = h - ((val - minVal) / (maxVal - minVal)) * h;
+        i === 0 ? graphCtx.moveTo(x, y) : graphCtx.lineTo(x, y);
+      });
+      graphCtx.stroke();
+    }
+
+    // ============================================
+    // GAUGE
+    // ============================================
+
+    let gaugeCanvas, gaugeCtx;
+
+    function initGauge() {
+      gaugeCanvas = document.getElementById('gauge-canvas');
+      gaugeCtx    = gaugeCanvas.getContext('2d');
+    }
+
+    function drawGauge(value) {
+
+      if (!gaugeCtx) return;
+
+      const w          = gaugeCanvas.width;
+      const h          = gaugeCanvas.height;
+      const cx         = w / 2;
+      const cy         = h / 2;
+      const radius     = w / 2 - 18;
+      const startAngle = Math.PI * 0.8;
+      const endAngle   = Math.PI * 2.2;
+      const totalAngle = endAngle - startAngle;
+
+      gaugeCtx.clearRect(0, 0, w, h);
+
+      // Background
+      gaugeCtx.beginPath();
+      gaugeCtx.arc(cx, cy, radius, startAngle, endAngle);
+      gaugeCtx.strokeStyle = 'rgba(255,255,255,0.08)';
+      gaugeCtx.lineWidth   = 20;
+      gaugeCtx.lineCap     = 'round';
+      gaugeCtx.stroke();
+
+      // Zones
+      const zones = [
+        { from: 0.00, to: 0.25, color: '#1565c0' },
+        { from: 0.25, to: 0.40, color: '#f57c00' },
+        { from: 0.40, to: 0.65, color: '#2e7d32' },
+        { from: 0.65, to: 0.80, color: '#f57c00' },
+        { from: 0.80, to: 1.00, color: '#c62828' }
+      ];
+
+      zones.forEach((zone) => {
+        gaugeCtx.beginPath();
+        gaugeCtx.arc(
+          cx, cy, radius,
+          startAngle + zone.from * totalAngle,
+          startAngle + zone.to   * totalAngle
+        );
+        gaugeCtx.strokeStyle = zone.color;
+        gaugeCtx.lineWidth   = 16;
+        gaugeCtx.lineCap     = 'butt';
+        gaugeCtx.stroke();
+      });
+
+      // Value arc
+      const minHR      = 30;
+      const maxHR      = 160;
+      const clamped    = Math.min(Math.max(value, minHR), maxHR);
+      const fraction   = (clamped - minHR) / (maxHR - minHR);
+      const valueAngle = startAngle + fraction * totalAngle;
+
+      const arcColor =
+        value >= THRESHOLDS.criticalHigh || value <= THRESHOLDS.criticalLow
+          ? '#e53935'
+          : value >= THRESHOLDS.warningHigh || value <= THRESHOLDS.warningLow
+          ? '#ff9800'
+          : '#4caf50';
+
+      gaugeCtx.beginPath();
+      gaugeCtx.arc(cx, cy, radius, startAngle, valueAngle);
+      gaugeCtx.strokeStyle = arcColor;
+      gaugeCtx.lineWidth   = 20;
+      gaugeCtx.lineCap     = 'round';
+      gaugeCtx.stroke();
+
+      // Tip dot
+      const tipX = cx + radius * Math.cos(valueAngle);
+      const tipY = cy + radius * Math.sin(valueAngle);
+      gaugeCtx.beginPath();
+      gaugeCtx.arc(tipX, tipY, 8, 0, Math.PI * 2);
+      gaugeCtx.fillStyle = 'white';
+      gaugeCtx.fill();
+
+      // Labels
+      const labels = [
+        { angle: startAngle + 0.12 * totalAngle, text: 'LOW',    color: '#1565c0' },
+        { angle: startAngle + 0.52 * totalAngle, text: 'NORMAL', color: '#2e7d32' },
+        { angle: startAngle + 0.90 * totalAngle, text: 'HIGH',   color: '#c62828' }
+      ];
+
+      gaugeCtx.font         = 'bold 9px Segoe UI';
+      gaugeCtx.textAlign    = 'center';
+      gaugeCtx.textBaseline = 'middle';
+
+      labels.forEach((lbl) => {
+        const lx = cx + (radius - 28) * Math.cos(lbl.angle);
+        const ly = cy + (radius - 28) * Math.sin(lbl.angle);
+        gaugeCtx.fillStyle = lbl.color;
+        gaugeCtx.fillText(lbl.text, lx, ly);
+      });
+    }
+
+    // Resize
+    window.addEventListener('resize', () => {
+      if (graphCanvas) {
+        graphCanvas.width = graphCanvas.offsetWidth;
+        drawGraph();
+      }
+    });
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,1407 @@
+/* ============================================
+   MEDICAL EMERGENCY SYSTEM - GLOBAL STYLES
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary: #e53935;
+  --primary-dark: #b71c1c;
+  --secondary: #1565c0;
+  --secondary-dark: #0d47a1;
+  --success: #2e7d32;
+  --success-light: #4caf50;
+  --warning: #f57c00;
+  --danger: #c62828;
+  --bg-dark: #0a0a0a;
+  --bg-card: #1a1a2e;
+  --bg-card2: #16213e;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --border: #2a2a4a;
+  --green-zone: #1b5e20;
+  --yellow-zone: #f57f17;
+  --red-zone: #b71c1c;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* ---- SCROLLBAR ---- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-card);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 3px;
+}
+
+/* ---- UTILITY ---- */
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.container-wide {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+
+/* ---- PAGE HEADER ---- */
+.page-header {
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-card2));
+  padding: 20px 16px;
+  border-bottom: 2px solid var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-header .logo {
+  width: 40px;
+  height: 40px;
+  background: var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.page-header h1 {
+  font-size: 18px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.page-header p {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ---- LOGIN PAGE ---- */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%);
+}
+
+.login-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(229, 57, 53, 0.15);
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.login-logo .heart-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.login-logo h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.login-logo p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* ---- FORM ELEMENTS ---- */
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: var(--text-primary);
+  font-size: 15px;
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--primary);
+  background: rgba(229, 57, 53, 0.05);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.form-group select option {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ---- BUTTONS ---- */
+.btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(229, 57, 53, 0.4);
+}
+
+.btn-success {
+  background: var(--success-light);
+  color: white;
+}
+
+.btn-success:hover {
+  background: var(--success);
+  transform: translateY(-1px);
+}
+
+.btn-blue {
+  background: var(--secondary);
+  color: white;
+}
+
+.btn-blue:hover {
+  background: var(--secondary-dark);
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+  width: auto;
+  border-radius: 6px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ---- ALERTS ---- */
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alert-error {
+  background: rgba(198, 40, 40, 0.2);
+  border: 1px solid var(--danger);
+  color: #ef9a9a;
+}
+
+.alert-success {
+  background: rgba(46, 125, 50, 0.2);
+  border: 1px solid var(--success-light);
+  color: #a5d6a7;
+}
+
+.alert-warning {
+  background: rgba(245, 124, 0, 0.2);
+  border: 1px solid var(--warning);
+  color: #ffcc02;
+}
+
+/* ---- BLUETOOTH STATUS ---- */
+.bt-status {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bt-status .bt-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bt-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #666;
+  transition: background 0.3s;
+}
+
+.bt-dot.connected {
+  background: var(--success-light);
+  box-shadow: 0 0 8px var(--success-light);
+  animation: pulse 2s infinite;
+}
+
+.bt-dot.scanning {
+  background: var(--warning);
+  animation: blink 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.bt-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.bt-name {
+  font-size: 11px;
+  color: var(--success-light);
+  margin-top: 2px;
+}
+
+/* ---- DEVICE LIST ---- */
+.device-list {
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.device-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.device-item:last-child {
+  border-bottom: none;
+}
+
+.device-item:hover {
+  background: rgba(229, 57, 53, 0.1);
+}
+
+/* ---- SETUP PAGE ---- */
+.setup-page {
+  min-height: 100vh;
+  background: var(--bg-dark);
+  padding-bottom: 80px;
+}
+
+.setup-content {
+  padding: 24px 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.setup-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.setup-section h3 {
+  font-size: 15px;
+  color: var(--primary);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Hospital preference list */
+.hospital-pref-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hospital-pref-item .pref-number {
+  width: 24px;
+  height: 24px;
+  background: var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.hospital-pref-item .pref-name {
+  flex: 1;
+  font-size: 14px;
+}
+
+.hospital-pref-item .remove-pref {
+  background: none;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+}
+
+/* Add hospital row */
+.add-hospital-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.add-hospital-row select {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+}
+
+.add-hospital-row button {
+  background: var(--secondary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Done bar */
+.done-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--success-light);
+  padding: 16px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.2s;
+  z-index: 100;
+}
+
+.done-bar:hover {
+  background: var(--success);
+}
+
+/* ---- DASHBOARD PAGE ---- */
+.dashboard-page {
+  min-height: 100vh;
+  background: var(--bg-dark);
+  padding-bottom: 20px;
+}
+
+.patient-info-bar {
+  background: var(--bg-card);
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.patient-info-bar .patient-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.patient-info-bar .patient-age {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* BP Graph */
+.bp-graph-container {
+  background: var(--bg-card);
+  margin: 16px;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+.bp-graph-container h3 {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+#bp-canvas {
+  width: 100%;
+  height: 100px;
+  display: block;
+}
+
+/* Circular BP Gauge */
+.gauge-section {
+  display: flex;
+  justify-content: center;
+  margin: 16px;
+}
+
+.gauge-wrapper {
+  position: relative;
+  width: 220px;
+  height: 220px;
+}
+
+#gauge-canvas {
+  width: 220px;
+  height: 220px;
+}
+
+.gauge-center-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.gauge-center-text .bp-value {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.gauge-center-text .bp-unit {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.gauge-center-text .bp-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+/* Status Indicator */
+.status-badge {
+  text-align: center;
+  margin: 8px 16px 16px;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-normal {
+  background: rgba(46, 125, 50, 0.2);
+  border: 1px solid var(--success-light);
+  color: #a5d6a7;
+}
+
+.status-warning {
+  background: rgba(245, 124, 0, 0.2);
+  border: 1px solid var(--warning);
+  color: #ffcc02;
+}
+
+.status-critical {
+  background: rgba(198, 40, 40, 0.2);
+  border: 1px solid var(--danger);
+  color: #ef9a9a;
+}
+
+/* Heart Rate display */
+.hr-display {
+  background: var(--bg-card);
+  margin: 0 16px 16px;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hr-display .hr-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.hr-display .hr-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.hr-display .hr-unit {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.hr-icon {
+  font-size: 32px;
+  animation: heartbeat 1s infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.15); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.1); }
+}
+
+/* Connection status on dashboard */
+.connection-banner {
+  background: rgba(229, 57, 53, 0.1);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+/* ---- EMERGENCY POPUP OVERLAY ---- */
+.emergency-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.emergency-popup {
+  background: var(--bg-card);
+  border: 2px solid var(--danger);
+  border-radius: 16px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 0 40px rgba(229, 57, 53, 0.5);
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.emergency-popup .warning-icon {
+  font-size: 52px;
+  text-align: center;
+  display: block;
+  margin-bottom: 12px;
+  animation: shake 0.5s infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+.emergency-popup h2 {
+  text-align: center;
+  font-size: 18px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.emergency-popup p {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.emergency-timer {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 20px;
+}
+
+.emergency-popup .no-btn {
+  background: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 16px;
+  width: 100%;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.emergency-popup .no-btn:hover {
+  background: var(--primary-dark);
+}
+
+/* ---- AMBULANCE EMERGENCY LIST ---- */
+.ambulance-page {
+  min-height: 100vh;
+  background: var(--bg-dark);
+}
+
+.emergency-list {
+  padding: 16px;
+}
+
+.emergency-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.emergency-card .emergency-info {
+  flex: 1;
+}
+
+.emergency-card .condition-badge {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.emergency-card .patient-detail {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.save-life-btn {
+  background: var(--success-light);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.save-life-btn:hover {
+  background: var(--success);
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state .empty-icon {
+  font-size: 60px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+/* ---- PATIENT DETAIL PAGE (Ambulance) ---- */
+.detail-page {
+  min-height: 100vh;
+  background: var(--bg-dark);
+  padding-bottom: 20px;
+}
+
+.detail-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 16px;
+}
+
+.detail-card h3 {
+  font-size: 13px;
+  color: var(--primary);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  letter-spacing: 0.5px;
+}
+
+.detail-row {
+  display: flex;
+  margin-bottom: 10px;
+  gap: 12px;
+}
+
+.detail-row .detail-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 100px;
+  text-transform: uppercase;
+}
+
+.detail-row .detail-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+  flex: 1;
+}
+
+.map-placeholder {
+  background: rgba(21, 101, 192, 0.15);
+  border: 2px dashed var(--secondary);
+  border-radius: 12px;
+  height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 16px;
+  transition: background 0.2s;
+}
+
+.map-placeholder:hover {
+  background: rgba(21, 101, 192, 0.25);
+}
+
+.map-placeholder .map-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+.map-placeholder p {
+  font-size: 14px;
+  color: var(--secondary);
+  font-weight: 600;
+}
+
+.map-placeholder small {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* Action buttons at bottom */
+.action-buttons {
+  padding: 0 16px;
+  display: flex;
+  gap: 10px;
+}
+
+.action-buttons .btn {
+  flex: 1;
+}
+
+/* Hospital search */
+.hospital-search-section {
+  padding: 0 16px 16px;
+}
+
+.hospital-search-section h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.search-input-wrapper {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.search-input-wrapper input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 40px 12px 14px;
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+}
+
+.search-input-wrapper input:focus {
+  border-color: var(--secondary);
+}
+
+.search-input-wrapper .search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+}
+
+.hospital-results {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.hospital-result-item {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.2s;
+}
+
+.hospital-result-item:last-child {
+  border-bottom: none;
+}
+
+.hospital-result-item:hover {
+  background: rgba(21, 101, 192, 0.1);
+}
+
+.hospital-result-item.selected {
+  background: rgba(46, 125, 50, 0.15);
+  border-left: 3px solid var(--success-light);
+}
+
+.hospital-result-item .check-icon {
+  color: var(--success-light);
+  font-size: 16px;
+}
+
+/* ---- HOSPITAL ROUTE PAGE ---- */
+.route-page {
+  min-height: 100vh;
+  background: var(--bg-dark);
+  padding-bottom: 20px;
+}
+
+/* ---- HOSPITAL DASHBOARD ---- */
+.hospital-page {
+  min-height: 100vh;
+  background: var(--bg-dark);
+}
+
+.patient-incoming-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--warning);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.patient-incoming-card .incoming-info {
+  flex: 1;
+}
+
+.incoming-condition {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--warning);
+  text-transform: uppercase;
+}
+
+.view-btn {
+  background: var(--success-light);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Patient detail modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 998;
+  display: flex;
+  align-items: flex-end;
+  backdrop-filter: blur(2px);
+}
+
+.modal-sheet {
+  background: var(--bg-card);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 24px 20px;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-sheet .modal-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+.modal-sheet h2 {
+  font-size: 18px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.close-modal-btn {
+  float: right;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+  margin-top: -4px;
+}
+
+/* File attachments */
+.doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.doc-item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.doc-item:hover {
+  background: rgba(21, 101, 192, 0.1);
+}
+
+/* ---- ADMIN DASHBOARD ---- */
+.admin-page {
+  min-height: 100vh;
+  background: var(--bg-dark);
+  padding-bottom: 30px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 16px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-card .stat-number {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.stat-card .stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+.admin-tabs {
+  display: flex;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.admin-tab {
+  padding: 14px 20px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.admin-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.tab-content {
+  padding: 16px;
+}
+
+.user-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-card .user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.user-card .user-info {
+  flex: 1;
+}
+
+.user-card .user-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.user-card .user-role {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.user-card .user-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-active {
+  background: rgba(76, 175, 80, 0.2);
+  color: #81c784;
+}
+
+.badge-inactive {
+  background: rgba(198, 40, 40, 0.2);
+  color: #ef9a9a;
+}
+
+/* Create user form */
+.create-user-form {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.create-user-form h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--primary);
+}
+
+/* ---- NOTIFICATION BANNER ---- */
+.notification-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--success);
+  color: white;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 990;
+  transform: translateY(-100%);
+  transition: transform 0.3s;
+}
+
+.notification-banner.show {
+  transform: translateY(0);
+}
+
+/* ---- LOGOUT BTN ---- */
+.logout-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ---- LOADING SPINNER ---- */
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---- FILE UPLOAD AREA ---- */
+.file-upload-area {
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.file-upload-area:hover {
+  border-color: var(--primary);
+}
+
+.file-upload-area .upload-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+
+.file-upload-area p {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.file-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.file-list-item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---- THANK YOU PAGE ---- */
+.thankyou-section {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.thankyou-section .ty-icon {
+  font-size: 60px;
+  margin-bottom: 16px;
+}
+
+.thankyou-section h2 {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.thankyou-section p {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .gauge-wrapper {
+    width: 180px;
+    height: 180px;
+  }
+
+  #gauge-canvas {
+    width: 180px;
+    height: 180px;
+  }
+}

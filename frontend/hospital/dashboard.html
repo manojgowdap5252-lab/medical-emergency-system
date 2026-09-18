@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAlert - Hospital Dashboard</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body class="hospital-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="logo">🏥</div>
+    <div style="flex:1;">
+      <h1 id="hospital-display-name">Hospital</h1>
+      <p>Emergency Receiving Station</p>
+    </div>
+    <button class="logout-btn" onclick="logout('login.html')">Logout</button>
+  </div>
+
+  <!-- Status bar -->
+  <div style="
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  ">
+    <div style="font-size:14px; font-weight:700; color:var(--primary);">
+      🚨 PATIENT ARRIVING
+    </div>
+    <div style="display:flex; align-items:center; gap:6px;">
+      <span class="bt-dot" id="socket-dot"></span>
+      <span id="socket-status"
+        style="font-size:12px; color:var(--text-secondary);">
+        Connecting...
+      </span>
+    </div>
+  </div>
+
+  <!-- Alert container -->
+  <div id="alert-container" style="padding:12px 16px 0;"></div>
+
+  <!-- Incoming Patients List -->
+  <div id="incoming-list" style="padding:16px;">
+    <div class="empty-state">
+      <span class="empty-icon">🏥</span>
+      <h3>No Incoming Patients</h3>
+      <p>Patient arrivals will appear here automatically</p>
+    </div>
+  </div>
+
+  <!-- Patient Detail Modal -->
+  <div class="modal-overlay hidden" id="patient-modal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <button class="close-modal-btn" onclick="closeModal()">✕</button>
+      <h2>Patient Details</h2>
+
+      <div style="
+        background: rgba(229,57,53,0.1);
+        border: 1px solid var(--danger);
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 16px;
+        text-align: center;
+      ">
+        <div style="font-size:20px; font-weight:700; color:#ef9a9a;"
+          id="modal-condition-text">--</div>
+        <div style="font-size:13px; color:var(--text-secondary);"
+          id="modal-vitals">--</div>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Name</span>
+        <span class="detail-value" id="modal-name">--</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Age</span>
+        <span class="detail-value" id="modal-age">--</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Gender</span>
+        <span class="detail-value" id="modal-gender">--</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Health Issues</span>
+        <span class="detail-value" id="modal-health">--</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Surgeries</span>
+        <span class="detail-value" id="modal-surgeries">--</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Living With</span>
+        <span class="detail-value" id="modal-living">--</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Emergency #</span>
+        <span class="detail-value" id="modal-emergency">--</span>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div style="
+          font-size:13px;
+          color:var(--primary);
+          text-transform:uppercase;
+          margin-bottom:10px;
+          font-weight:600;
+        ">
+          📎 Health Documents
+        </div>
+        <div id="modal-docs">
+          <p style="font-size:13px; color:var(--text-secondary);">
+            No documents uploaded
+          </p>
+        </div>
+      </div>
+
+      <div style="height:20px;"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+
+    let socket = null;
+
+    // Store as array not object to avoid key issues
+    let incomingPatients = [];
+
+    // ============================================
+    // INIT
+    // ============================================
+
+    window.addEventListener('load', () => {
+
+      if (!Auth.isLoggedIn()) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const user = Auth.getUser();
+
+      if (!user || user.role !== 'hospital') {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      document.getElementById('hospital-display-name').textContent =
+        user.hospitalName || user.name;
+
+      console.log('Hospital loaded');
+      console.log('User ID:', user.id);
+      console.log('Hospital name:', user.hospitalName || user.name);
+
+      initSocket(user.id);
+    });
+
+    // ============================================
+    // SOCKET
+    // ============================================
+
+    function initSocket(userId) {
+
+      socket = io(SOCKET_URL);
+
+      socket.on('connect', () => {
+
+        console.log('Socket connected:', socket.id);
+        console.log('Joining room: hospital_' + userId);
+
+        socket.emit('join_room', {
+          role:   'hospital',
+          userId: userId
+        });
+
+        document.getElementById('socket-dot').className     = 'bt-dot connected';
+        document.getElementById('socket-status').textContent = 'Live';
+      });
+
+      socket.on('disconnect', () => {
+        document.getElementById('socket-dot').className     = 'bt-dot';
+        document.getElementById('socket-status').textContent = 'Disconnected';
+        console.log('Socket disconnected');
+      });
+
+      // ---- Patient incoming event ----
+      socket.on('patient_incoming', (data) => {
+
+        console.log('');
+        console.log('=== PATIENT INCOMING EVENT RECEIVED ===');
+        console.log('Full data:', JSON.stringify(data, null, 2));
+        console.log('=======================================');
+        console.log('');
+
+        // Convert emergencyId to string to avoid ObjectId issues
+        const emergencyIdStr = String(data.emergencyId);
+
+        // Check if already in list
+        const existingIndex = incomingPatients.findIndex(
+          (p) => String(p.emergencyId) === emergencyIdStr
+        );
+
+        if (existingIndex >= 0) {
+          // Update existing
+          incomingPatients[existingIndex] = {
+            ...data,
+            emergencyId: emergencyIdStr
+          };
+        } else {
+          // Add new
+          incomingPatients.push({
+            ...data,
+            emergencyId: emergencyIdStr
+          });
+        }
+
+        console.log('Total incoming patients:', incomingPatients.length);
+
+        renderIncomingList();
+        playHospitalAlert();
+        showNotification('🚨 Patient arriving! View details now.', 8000);
+      });
+
+      // Listen for any event for debugging
+      socket.onAny((eventName, ...args) => {
+        console.log('Socket event received:', eventName, args);
+      });
+    }
+
+    // ============================================
+    // RENDER
+    // ============================================
+
+    function renderIncomingList() {
+
+      console.log('Rendering list with', incomingPatients.length, 'patients');
+
+      const list = document.getElementById('incoming-list');
+
+      if (incomingPatients.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <span class="empty-icon">🏥</span>
+            <h3>No Incoming Patients</h3>
+            <p>Patient arrivals will appear here automatically</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = incomingPatients.map((p, index) => `
+        <div class="patient-incoming-card">
+          <div class="incoming-info">
+            <div class="incoming-condition">
+              ${getConditionLabel(p.condition)}
+            </div>
+            <div style="font-size:14px; font-weight:600; margin-top:6px;">
+              👤 ${p.patientName || '--'}
+            </div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:3px;">
+              ❤️ HR: ${p.heartRate || '--'} BPM
+            </div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:3px;">
+              📍 ${p.patientAddress || '--'}
+            </div>
+          </div>
+          <button class="view-btn" onclick="viewPatient(${index})">
+            👁️ VIEW
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // ============================================
+    // VIEW PATIENT
+    // ============================================
+
+    function viewPatient(index) {
+
+      const data = incomingPatients[index];
+
+      if (!data) {
+        console.error('Patient not found at index:', index);
+        return;
+      }
+
+      console.log('Viewing patient:', data);
+
+      const p = data.patientDetails || {};
+
+      document.getElementById('modal-condition-text').textContent =
+        getConditionLabel(data.condition);
+
+      document.getElementById('modal-vitals').textContent =
+        `Heart Rate: ${data.heartRate || '--'} BPM`;
+
+      document.getElementById('modal-name').textContent =
+        p.name || data.patientName || '--';
+
+      document.getElementById('modal-age').textContent =
+        p.age ? `${p.age} years` : '--';
+
+      document.getElementById('modal-gender').textContent =
+        p.gender || '--';
+
+      document.getElementById('modal-health').textContent =
+        p.previousHealthProblems || 'None';
+
+      document.getElementById('modal-surgeries').textContent =
+        p.previousSurgeries || 'None';
+
+      document.getElementById('modal-living').textContent =
+        p.livingWith || '--';
+
+      document.getElementById('modal-emergency').textContent =
+        p.emergencyContact || '--';
+
+      const docsEl = document.getElementById('modal-docs');
+
+      if (p.healthDocuments && p.healthDocuments.length > 0) {
+        docsEl.innerHTML = p.healthDocuments.map((doc) => `
+          <a
+            class="doc-item"
+            href="http://localhost:3000/api/patient/documents/${doc.filename}"
+            target="_blank"
+          >
+            <span>📄</span>
+            <span>${doc.originalName}</span>
+            <span style="color:var(--secondary); font-size:11px;">Open ↗</span>
+          </a>
+        `).join('');
+      } else {
+        docsEl.innerHTML =
+          '<p style="font-size:13px; color:var(--text-secondary);">No documents</p>';
+      }
+
+      document.getElementById('patient-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('patient-modal').classList.add('hidden');
+    }
+
+    // ============================================
+    // ALERT SOUND
+    // ============================================
+
+    function playHospitalAlert() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.4, 0.8].forEach((delay) => {
+          const osc  = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = 660;
+          gain.gain.setValueAtTime(0.4, ctx.currentTime + delay);
+          gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            ctx.currentTime + delay + 0.3
+          );
+          osc.start(ctx.currentTime + delay);
+          osc.stop(ctx.currentTime + delay + 0.3);
+        });
+      } catch (e) {
+        console.log('Audio error:', e);
+      }
+    }
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAlert - Emergency Dashboard</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body class="ambulance-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="logo">🚑</div>
+    <div style="flex:1;">
+      <h1>Emergency Dashboard</h1>
+      <p id="driver-name-display">Loading...</p>
+    </div>
+    <button class="logout-btn" onclick="logout('login.html')">Logout</button>
+  </div>
+
+  <!-- Status bar -->
+  <div style="
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+  ">
+    <span style="color:var(--text-secondary);">
+      Live Emergency Alerts
+    </span>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span id="last-refresh" style="font-size:11px; color:var(--text-secondary);"></span>
+      <button
+        onclick="loadActiveEmergencies()"
+        style="
+          background: rgba(21,101,192,0.2);
+          border: 1px solid var(--secondary);
+          color: #90caf9;
+          padding: 4px 12px;
+          border-radius: 6px;
+          font-size: 12px;
+          cursor: pointer;
+        "
+      >
+        🔄 Refresh
+      </button>
+      <span style="display:flex; align-items:center; gap:6px;">
+        <span class="bt-dot" id="socket-dot"></span>
+        <span id="socket-status" style="color:var(--text-secondary);">
+          Connecting...
+        </span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Alert container -->
+  <div id="alert-container" style="padding: 12px 16px 0;"></div>
+
+  <!-- Emergency List -->
+  <div id="emergency-list">
+    <div style="padding:30px; text-align:center; color:var(--text-secondary);">
+      ⏳ Loading...
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+
+    let socket      = null;
+    let emergencies = {};
+    let autoRefreshInterval = null;
+
+    // ============================================
+    // INIT
+    // ============================================
+
+    window.addEventListener('load', async () => {
+
+      if (!Auth.isLoggedIn()) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const user = Auth.getUser();
+
+      if (!user || user.role !== 'ambulance') {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      document.getElementById('driver-name-display').textContent = user.name;
+
+      // Load from database immediately
+      await loadActiveEmergencies();
+
+      // Connect socket for live events
+      initSocket(user.id);
+
+      // Auto refresh every 5 seconds as backup
+      // This ensures emergencies show even if socket missed them
+      autoRefreshInterval = setInterval(() => {
+        loadActiveEmergencies();
+      }, 5000);
+    });
+
+    // ============================================
+    // LOAD FROM DATABASE
+    // ============================================
+
+    async function loadActiveEmergencies() {
+
+      console.log('Fetching active emergencies...');
+
+      const result = await API.get('/emergency/active');
+
+      console.log('API result:', result);
+
+      if (result.ok && result.data.success) {
+
+        const newEmergencies = {};
+
+        result.data.emergencies.forEach((e) => {
+          newEmergencies[e._id] = {
+            emergencyId:    e._id,
+            patientName:    e.patientName,
+            patientAddress: e.patientAddress,
+            condition:      e.condition,
+            bpValue:        e.bpValue,
+            heartRate:      e.heartRate,
+            createdAt:      e.createdAt
+          };
+        });
+
+        emergencies = newEmergencies;
+
+        console.log('Count:', Object.keys(emergencies).length);
+
+        renderEmergencies();
+
+        // Update last refresh time
+        document.getElementById('last-refresh').textContent =
+          'Updated: ' + new Date().toLocaleTimeString();
+
+      } else {
+        console.error('Failed:', result.data.message);
+      }
+    }
+
+    // ============================================
+    // SOCKET
+    // ============================================
+
+    function initSocket(userId) {
+
+      socket = io(SOCKET_URL);
+
+      socket.on('connect', () => {
+
+        console.log('Socket connected');
+
+        socket.emit('join_room', {
+          role:   'ambulance',
+          userId: userId
+        });
+
+        document.getElementById('socket-dot').className     = 'bt-dot connected';
+        document.getElementById('socket-status').textContent = 'Live';
+
+        // Load again after socket connects
+        loadActiveEmergencies();
+      });
+
+      socket.on('disconnect', () => {
+        document.getElementById('socket-dot').className     = 'bt-dot';
+        document.getElementById('socket-status').textContent = 'Reconnecting...';
+      });
+
+      // Real time new emergency
+      socket.on('new_emergency', (data) => {
+
+        console.log('SOCKET: new_emergency received:', data);
+
+        emergencies[data.emergencyId] = data;
+        renderEmergencies();
+        playAlertSound();
+        showNotification('🚨 New Emergency! Patient needs help!', 6000);
+      });
+
+      // Emergency taken by someone else
+      socket.on('emergency_taken', (data) => {
+        console.log('SOCKET: emergency_taken:', data.emergencyId);
+        delete emergencies[data.emergencyId];
+        renderEmergencies();
+      });
+    }
+
+    // ============================================
+    // RENDER
+    // ============================================
+
+    function renderEmergencies() {
+
+      const list = document.getElementById('emergency-list');
+      const keys = Object.keys(emergencies);
+
+      if (keys.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <span class="empty-icon">✅</span>
+            <h3>No Active Emergencies</h3>
+            <p>New emergencies will appear here automatically</p>
+            <p style="font-size:12px; color:var(--text-secondary); margin-top:8px;">
+              Auto refreshing every 5 seconds
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = `
+        <div style="
+          padding: 10px 16px;
+          font-size: 13px;
+          color: var(--primary);
+          font-weight: 700;
+          background: rgba(229,57,53,0.1);
+          border-bottom: 1px solid var(--border);
+        ">
+          🚨 ${keys.length} Active Emergency${keys.length > 1 ? 'ies' : ''}
+        </div>
+        ${keys.map((id) => renderCard(id)).join('')}
+      `;
+    }
+
+    function renderCard(id) {
+
+      const e = emergencies[id];
+
+      return `
+        <div class="emergency-card" id="card-${id}">
+          <div class="emergency-info">
+            <div class="condition-badge">
+              ${getConditionLabel(e.condition)}
+            </div>
+            <div style="
+              font-size:15px;
+              font-weight:700;
+              color:var(--text-primary);
+              margin-top:8px;
+            ">
+              👤 ${e.patientName}
+            </div>
+            <div class="patient-detail" style="margin-top:4px;">
+              📍 ${e.patientAddress}
+            </div>
+            <div class="patient-detail" style="margin-top:4px;">
+              ❤️ HR: ${e.heartRate || '--'} BPM
+            </div>
+            <div class="patient-detail" style="margin-top:4px; font-size:11px;">
+              🕐 ${formatDateTime(e.createdAt)}
+            </div>
+          </div>
+          <button
+            class="save-life-btn"
+            id="save-btn-${id}"
+            onclick="acceptEmergency('${id}')"
+          >
+            💚 SAVE<br/>LIFE
+          </button>
+        </div>
+      `;
+    }
+
+    // ============================================
+    // ACCEPT EMERGENCY
+    // ============================================
+
+    async function acceptEmergency(emergencyId) {
+
+      console.log('Accepting emergency:', emergencyId);
+
+      const btn = document.getElementById(`save-btn-${emergencyId}`);
+      if (btn) {
+        btn.disabled  = true;
+        btn.innerHTML = '⏳<br/>Wait...';
+      }
+
+      // Stop auto refresh while accepting
+      clearInterval(autoRefreshInterval);
+
+      const result = await API.put(
+        `/emergency/${emergencyId}/accept`,
+        {}
+      );
+
+      console.log('Accept result:', result);
+
+      if (result.ok && result.data.success) {
+
+        sessionStorage.setItem('active_emergency', JSON.stringify({
+          emergencyId,
+          emergency: result.data.emergency,
+          patient:   result.data.patient
+        }));
+
+        window.location.href = 'patient-detail.html';
+
+      } else {
+
+        showAlert(
+          'alert-container',
+          result.data.message || 'Failed to accept. Try again.',
+          'error'
+        );
+
+        if (btn) {
+          btn.disabled  = false;
+          btn.innerHTML = '💚 SAVE<br/>LIFE';
+        }
+
+        // Restart auto refresh
+        autoRefreshInterval = setInterval(() => {
+          loadActiveEmergencies();
+        }, 5000);
+
+        await loadActiveEmergencies();
+      }
+    }
+
+    // ============================================
+    // ALERT SOUND
+    // ============================================
+
+    function playAlertSound() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.35, 0.7].forEach((delay) => {
+          const osc  = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = 880;
+          gain.gain.setValueAtTime(0.5, ctx.currentTime + delay);
+          gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            ctx.currentTime + delay + 0.3
+          );
+          osc.start(ctx.currentTime + delay);
+          osc.stop(ctx.currentTime + delay + 0.3);
+        });
+      } catch (e) {
+        console.log('Audio error:', e);
+      }
+    }
+
+    // Cleanup on page leave
+    window.addEventListener('beforeunload', () => {
+      clearInterval(autoRefreshInterval);
+    });
+
+  </script>
+</body>
+</html>

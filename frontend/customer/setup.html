@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAlert - Patient Setup</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body class="setup-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="logo">📋</div>
+    <div>
+      <h1>Patient Setup</h1>
+      <p>Fill in your medical information</p>
+    </div>
+  </div>
+
+  <div class="setup-content">
+    <div id="alert-container"></div>
+
+    <form id="setup-form" enctype="multipart/form-data">
+
+      <!-- Personal Info -->
+      <div class="setup-section">
+        <h3>👤 Personal Information</h3>
+
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="name" placeholder="Your full name" required />
+        </div>
+
+        <div style="display:flex; gap:12px;">
+          <div class="form-group" style="flex:1;">
+            <label>Age</label>
+            <input type="number" id="age" placeholder="Age" min="1" max="120" required />
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Gender</label>
+            <select id="gender" required>
+              <option value="">Select</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Home Address</label>
+          <textarea id="address" placeholder="Your full address" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Living With</label>
+          <select id="livingWith" required>
+            <option value="">Select living situation</option>
+            <option value="family">👨‍👩‍👧 Family</option>
+            <option value="friends">👫 Friends</option>
+            <option value="alone">🧍 Alone</option>
+            <option value="sometimes alone">🔄 Sometimes Alone</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Medical History -->
+      <div class="setup-section">
+        <h3>🏥 Medical History</h3>
+
+        <div class="form-group">
+          <label>Previous Health Problems</label>
+          <textarea
+            id="previousHealthProblems"
+            placeholder="e.g., Diabetes, Hypertension, Asthma... (leave blank if none)"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Previous Surgeries</label>
+          <textarea
+            id="previousSurgeries"
+            placeholder="e.g., Appendectomy 2019... (leave blank if none)"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Emergency Contact -->
+      <div class="setup-section">
+        <h3>📞 Emergency Contact</h3>
+
+        <div class="form-group">
+          <label>Emergency Phone Number</label>
+          <input
+            type="tel"
+            id="emergencyContact"
+            placeholder="Emergency contact number"
+            required
+          />
+        </div>
+      </div>
+
+      <!-- Hospital Preferences -->
+      <div class="setup-section">
+        <h3>🏨 Hospital Preferences</h3>
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
+          Add hospitals in order of preference (1st = most preferred)
+        </p>
+
+        <!-- Selected preferences list -->
+        <div id="hospital-pref-list"></div>
+
+        <!-- Add hospital dropdown -->
+        <div class="add-hospital-row">
+          <select id="hospital-select">
+            <option value="">Select a hospital...</option>
+          </select>
+          <button type="button" onclick="addHospitalPreference()">
+            + Add
+          </button>
+        </div>
+      </div>
+
+      <!-- Health Documents -->
+      <div class="setup-section">
+        <h3>📎 Health Documents</h3>
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
+          Upload any medical reports, prescriptions, or health documents
+        </p>
+
+        <div
+          class="file-upload-area"
+          onclick="document.getElementById('file-input').click()"
+        >
+          <div class="upload-icon">📄</div>
+          <p>Tap to upload health documents</p>
+          <p style="font-size:11px; margin-top:4px;">
+            Supports: PDF, JPG, PNG, DOC (Max 10MB each)
+          </p>
+        </div>
+
+        <input
+          type="file"
+          id="file-input"
+          multiple
+          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+          class="hidden"
+          onchange="handleFileSelect(event)"
+        />
+
+        <div id="file-list" class="file-list"></div>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Done Bar -->
+  <div class="done-bar" onclick="submitSetup()">
+    ✅ DONE
+  </div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+    let hospitalPreferences = [];
+    let allHospitals = [];
+    let selectedFiles = [];
+
+    // ---- Auth Guard ----
+    window.addEventListener('load', async () => {
+      if (!Auth.isLoggedIn()) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const user = Auth.getUser();
+      if (!user || user.role !== 'customer') {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Pre-fill name from login
+      document.getElementById('name').value = user.name;
+
+      // Load hospitals
+      await loadHospitals();
+
+      // Try to load existing profile
+      await loadExistingProfile();
+    });
+
+    async function loadHospitals() {
+      const result = await fetch('http://localhost:3000/api/hospitals');
+      const data = await result.json();
+
+      if (data.success) {
+        allHospitals = data.hospitals;
+        const select = document.getElementById('hospital-select');
+        select.innerHTML = '<option value="">Select a hospital...</option>';
+        data.hospitals.forEach((h) => {
+          select.innerHTML += `<option value="${h._id}" data-name="${h.hospitalName}">${h.hospitalName}</option>`;
+        });
+      }
+    }
+
+    async function loadExistingProfile() {
+      const result = await API.get('/patient/profile');
+      if (result.ok && result.data.success) {
+        const p = result.data.patient;
+        document.getElementById('name').value = p.name || '';
+        document.getElementById('age').value = p.age || '';
+        document.getElementById('gender').value = p.gender || '';
+        document.getElementById('address').value = p.address || '';
+        document.getElementById('livingWith').value = p.livingWith || '';
+        document.getElementById('previousHealthProblems').value = p.previousHealthProblems || '';
+        document.getElementById('previousSurgeries').value = p.previousSurgeries || '';
+        document.getElementById('emergencyContact').value = p.emergencyContact || '';
+
+        hospitalPreferences = p.hospitalPreferences || [];
+        renderHospitalPreferences();
+      }
+    }
+
+    function addHospitalPreference() {
+      const select = document.getElementById('hospital-select');
+      const hospitalId = select.value;
+      const hospitalName =
+        select.options[select.selectedIndex]?.dataset.name;
+
+      if (!hospitalId || !hospitalName) {
+        showAlert('alert-container', 'Please select a hospital first', 'error');
+        return;
+      }
+
+      const alreadyAdded = hospitalPreferences.find(
+        (h) => h.hospitalId === hospitalId
+      );
+      if (alreadyAdded) {
+        showAlert('alert-container', 'This hospital is already added', 'error');
+        return;
+      }
+
+      hospitalPreferences.push({
+        order: hospitalPreferences.length + 1,
+        hospitalId,
+        hospitalName
+      });
+
+      renderHospitalPreferences();
+      select.value = '';
+    }
+
+    function removeHospitalPreference(index) {
+      hospitalPreferences.splice(index, 1);
+      // Re-order
+      hospitalPreferences.forEach((h, i) => (h.order = i + 1));
+      renderHospitalPreferences();
+    }
+
+    function renderHospitalPreferences() {
+      const list = document.getElementById('hospital-pref-list');
+      if (hospitalPreferences.length === 0) {
+        list.innerHTML = '<p style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">No hospitals added yet</p>';
+        return;
+      }
+
+      list.innerHTML = hospitalPreferences
+        .map(
+          (h, i) => `
+        <div class="hospital-pref-item">
+          <div class="pref-number">${h.order}</div>
+          <div class="pref-name">${h.hospitalName}</div>
+          <button
+            type="button"
+            class="remove-pref"
+            onclick="removeHospitalPreference(${i})"
+          >✕</button>
+        </div>
+      `
+        )
+        .join('');
+    }
+
+    function handleFileSelect(event) {
+      const files = Array.from(event.target.files);
+      selectedFiles = [...selectedFiles, ...files];
+      renderFileList();
+    }
+
+    function renderFileList() {
+      const list = document.getElementById('file-list');
+      if (selectedFiles.length === 0) {
+        list.innerHTML = '';
+        return;
+      }
+      list.innerHTML = selectedFiles
+        .map(
+          (file, i) => `
+        <div class="file-list-item">
+          <span>📄</span>
+          <span style="flex:1;">${file.name}</span>
+          <span style="color:var(--text-secondary);">${(file.size / 1024).toFixed(0)} KB</span>
+        </div>
+      `
+        )
+        .join('');
+    }
+
+    async function submitSetup() {
+      const name = document.getElementById('name').value.trim();
+      const age = document.getElementById('age').value;
+      const gender = document.getElementById('gender').value;
+      const address = document.getElementById('address').value.trim();
+      const livingWith = document.getElementById('livingWith').value;
+      const emergencyContact = document
+        .getElementById('emergencyContact')
+        .value.trim();
+
+      if (!name || !age || !gender || !address || !livingWith || !emergencyContact) {
+        showAlert('alert-container', 'Please fill in all required fields', 'error');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('age', age);
+      formData.append('gender', gender);
+      formData.append('address', address);
+      formData.append('livingWith', livingWith);
+      formData.append(
+        'previousHealthProblems',
+        document.getElementById('previousHealthProblems').value
+      );
+      formData.append(
+        'previousSurgeries',
+        document.getElementById('previousSurgeries').value
+      );
+      formData.append('emergencyContact', emergencyContact);
+      formData.append(
+        'hospitalPreferences',
+        JSON.stringify(hospitalPreferences)
+      );
+
+      selectedFiles.forEach((file) => {
+        formData.append('healthDocuments', file);
+      });
+
+      const result = await API.postForm('/patient/setup', formData);
+
+      if (result.ok && result.data.success) {
+        // Update user session
+        const user = Auth.getUser();
+        user.setupComplete = true;
+        Auth.setUser(user);
+
+        showAlert('alert-container', 'Profile saved! Redirecting...', 'success');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1200);
+      } else {
+        showAlert(
+          'alert-container',
+          result.data.message || 'Failed to save profile',
+          'error'
+        );
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  </script>
+</body>
+</html>

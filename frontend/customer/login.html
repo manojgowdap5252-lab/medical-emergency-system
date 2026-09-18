@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAlert - Patient Login</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+
+      <!-- Logo -->
+      <div class="login-logo">
+        <span class="heart-icon">❤️</span>
+        <h2>MedAlert</h2>
+        <p>Patient Emergency System</p>
+      </div>
+
+      <!-- Alert container -->
+      <div id="alert-container"></div>
+
+      <!-- Login Form -->
+      <form id="login-form">
+
+        <div class="form-group">
+          <label>Full Name</label>
+          <input
+            type="text"
+            id="name"
+            placeholder="Enter your name"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Enter password"
+            required
+          />
+        </div>
+
+        <!-- ESP32 Device Status -->
+        <div class="form-group">
+          <label>ESP32 Device Status</label>
+          <div
+            style="
+              background: rgba(255,255,255,0.03);
+              border: 1px solid var(--border);
+              border-radius: 10px;
+              padding: 14px;
+              display: flex;
+              align-items: center;
+              gap: 12px;
+            "
+          >
+            <span style="font-size: 28px;">📡</span>
+            <div>
+              <div
+                style="font-size: 14px; font-weight: 600; color: var(--text-primary);"
+              >
+                ESP32 via WiFi
+              </div>
+              <div
+                style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;"
+              >
+                Device connects automatically via WiFi network
+              </div>
+            </div>
+            <div
+              style="
+                margin-left: auto;
+                background: rgba(46,125,50,0.2);
+                border: 1px solid #4caf50;
+                color: #81c784;
+                padding: 4px 10px;
+                border-radius: 20px;
+                font-size: 11px;
+                font-weight: 700;
+              "
+            >
+              ● AUTO
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          id="login-btn"
+        >
+          Login →
+        </button>
+
+      </form>
+
+      <p
+        style="
+          text-align: center;
+          margin-top: 16px;
+          font-size: 12px;
+          color: var(--text-secondary);
+        "
+      >
+        Don't have an account? Contact administrator.
+      </p>
+
+    </div>
+  </div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+
+    // ---- Login Form ----
+    document
+      .getElementById('login-form')
+      .addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const name     = document.getElementById('name').value.trim();
+        const password = document.getElementById('password').value;
+        const loginBtn = document.getElementById('login-btn');
+
+        if (!name || !password) {
+          showAlert(
+            'alert-container',
+            'Please fill in all fields',
+            'error'
+          );
+          return;
+        }
+
+        showLoading(loginBtn, 'Logging in...');
+
+        const result = await API.post('/auth/login', {
+          name,
+          password,
+          role: 'customer'
+        });
+
+        hideLoading(loginBtn);
+
+        if (result.ok && result.data.success) {
+
+          Auth.setToken(result.data.token);
+          Auth.setUser(result.data.user);
+
+          showAlert(
+            'alert-container',
+            'Login successful! Loading...',
+            'success'
+          );
+
+          setTimeout(() => {
+            if (result.data.user.setupComplete) {
+              window.location.href = 'dashboard.html';
+            } else {
+              window.location.href = 'setup.html';
+            }
+          }, 800);
+
+        } else {
+          showAlert(
+            'alert-container',
+            result.data.message || 'Login failed. Check name and password.',
+            'error'
+          );
+        }
+      });
+
+    // ---- Check if already logged in ----
+    window.addEventListener('load', () => {
+      if (Auth.isLoggedIn()) {
+        const user = Auth.getUser();
+        if (user && user.role === 'customer') {
+          window.location.href = user.setupComplete
+            ? 'dashboard.html'
+            : 'setup.html';
+        }
+      }
+    });
+
+  </script>
+</body>
+</html>
