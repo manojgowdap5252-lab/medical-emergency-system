@@ -40,8 +40,8 @@ router.post(
 
       const existing = await Emergency.findOne({
         patientUserId: req.user.id,
-        status: { $nin: ['completed'] }
-      });
+        status: 'pending'
+      }).sort({ createdAt: -1 });
 
       console.log('Existing emergency:', existing ? existing._id : 'NONE');
 
