@@ -382,13 +382,8 @@
       });
 
       // Start simulation after 3 seconds if no real data
-      setTimeout(() => {
-        if (!realDataReceived) {
-          console.log('No ESP32 data. Starting simulation.');
-          startSimulation();
-        }
-      }, 3000);
-    }
+    console.log('Waiting for real ESP32 sensor data...');
+    } 
 
     function updateConnectionBanner(text, connected) {
       const banner   = document.getElementById('connection-banner');
